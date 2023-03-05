@@ -32,6 +32,9 @@ def launch_video(link:str):
     driver.request_interceptor = interceptor
     driver.set_window_size(400, 400)
     driver.get(link + '&autoplay=1')
+    try:
+        WebDriverWait(driver, 9000).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[aria-label="Play"]'))).click()
+    except: pass
     sleep(60)
     driver.close()
     URL_OPENED += 1
