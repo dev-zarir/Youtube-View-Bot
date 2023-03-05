@@ -2,7 +2,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from random import randint
-from selenium import webdriver
+from seleniumwire import webdriver
 from threading import Thread
 from fp.fp import FreeProxy
 from time import sleep
@@ -16,14 +16,20 @@ def print(*args, **kwargs):
     kwargs['flush'] = True
     dop(*args, **kwargs)
 
+def interceptor(request):
+    del request.headers['Referer']
+    request.headers['Referer'] = 'https://www.youtube.com/'
+
 def launch_video(link:str):
     global URL_OPENED
     options = webdriver.ChromeOptions()
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.add_argument('--log-level=3')
+    proxy_options = {}
     if randint(1,10) > 3:
-        options.add_argument("--proxy-server=" + FreeProxy(rand=True).get())
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option("useAutomationExtension", False)
-    driver=webdriver.Chrome(options=options)
+        proxy_options = {'proxy': {'http': FreeProxy(rand=True).get()}}
+    driver=webdriver.Chrome(options=options, seleniumwire_options=proxy_options)
+    driver.request_interceptor = interceptor
     driver.set_window_size(400, 400)
     driver.get(link)
     try:
@@ -38,7 +44,7 @@ link=sys.argv[1]
 while True:
     for i in range(6):
         t = Thread(target=lambda: launch_video(link))
-        t.setDaemon(True)
+        t.daemon = True
         t.start()
     sleep(60 + 10)
     ROUND += 1
